@@ -1,0 +1,110 @@
+#+TITLE: POPL
+#+AUTHOR: Thirumal Ravula
+#+DATE: [2017-04-28 Fri]
+#+SETUPFILE: ./org-templates/level-0.org
+#+TAGS: boilerplate(b)
+#+EXCLUDE_TAGS: boilerplate
+#+OPTIONS: ^:nil
+
+* Reduce
+  Reduce is implemented as a state machine, where after
+  consuming all the inputs, the final state determines the
+  result.  Input function, =f : x, a -> x-prime= that takes
+  current state as an input symbol determines the next
+  state.  After all the input symbols are consumed, an
+  output function =h : X -> Y= determines the output where
+  the range of the function is the set of states.  When in
+  the final state, =h= determines the result of reduce.
+  
+  The state machine is represented by the below formula.
+
+  S = ⟨X,U,Y,f:X,U→X,h:X→Y⟩
+
+#+name: list-reduce1
+#+BEGIN_SRC racket
+(provide list-reduce1)
+(define list-reduce1
+  (lambda (f h)
+    (lambda (x us)
+      (letrec ([loop
+               (lambda (us a)
+                 (cond
+                   [(null? us) (h a)]
+                   [else (loop (rest us) (f a (first us)))]))])
+        (loop us x)))))
+
+#+END_SRC
+
+* List length through reduce
+  The above reduce function is used to calculate the length
+  of a list.  The function =f= increments the state upon the
+  consumption of each input which is an element of a list.
+  The output function =h= will be in =id= that gives back
+  the final state which is length of the list. 
+
+#+name: list-length1
+#+BEGIN_SRC racket
+(provide list-length1)
+(define list-length1
+  (list-reduce1 (lambda (a us) (add1 a)) id))
+
+(check-equal? (list-length1 0 '()) 0 "length-1")
+(check-equal? (list-length1 0 '(1 2 3)) 3 "length-2")
+(check-equal? (list-length1 0 '(1 2 3 4)) 4 "length-3")
+
+#+END_SRC
+* Reverse List through reduce
+  Using the reduce machinery, reversing a list is realized.
+  The function =f= that builds the new state from the
+  current state and the input, pre-pends the input to the
+  current state.  The =h= is an identity that returns the
+  final state without any transformation.
+
+#+name: list-reverse1
+#+BEGIN_SRC racket
+(provide list-reverse1)
+(define list-reverse1
+  (list-reduce1 (lambda (state input)
+                  (cons input state)) id))
+
+(check-equal? (list-reverse1 '() '(1 2)) '(2 1) "reverse-1")
+(check-equal? (list-reverse1 '() '(a b c d)) '(d c b a) "reverse-2")
+
+#+END_SRC
+
+* List Sum
+  Given a list, produce the sum of the elements in the list
+  using the reduce.  The initial state will be =0= and the
+  =f= that takes the input and the current state to generate
+  a new state will add the current input to the state.  The
+  output function will be an identity function that returns
+  the final state.
+#+name: list-sum
+#+BEGIN_SRC racket
+(define list-sum1
+  (list-reduce1 (lambda (x u)
+                  (+ x u)) id))
+
+(check-equal? (list-sum1 0 '()) 0 "list-sum-1")
+(check-equal? (list-sum1 0 '(1 2)) 3 "list-sum-1")
+
+#+END_SRC
+
+* Imports
+#+name: imports
+#+BEGIN_SRC racket
+#lang racket
+(require rackunit)
+(require racket/trace)
+(require "comp.rkt")
+
+#+END_SRC
+
+* Tangle   :boilerplate:
+#+BEGIN_SRC html :tangle state-machine.rkt :eval no :noweb yes
+<<imports>>
+<<list-reduce1>>
+<<list-length1>>
+<<list-reverse1>>
+<<list-sum>>
+#+END_SRC

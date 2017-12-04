@@ -1,0 +1,80 @@
+#+TITLE: POPL
+#+AUTHOR: Thirumal Ravula
+#+DATE: [2017-04-28 Fri]
+#+SETUPFILE: ./org-templates/level-0.org
+#+TAGS: boilerplate(b)
+#+EXCLUDE_TAGS: boilerplate
+#+OPTIONS: ^:nil
+
+
+* Variable Arity Composition
+  Given variable number of functions,  a composition
+  function is returned where the functions are applied right
+  to left.
+  - Definition :: comp: [A_{n-1} -> A_n, A_{n-2} -> A_{n-1}
+       ... A_{0} -> A_{1}] -> A_0 -> A_n
+#+name: comp
+#+BEGIN_SRC racket
+(provide comp)
+
+(define comp
+  (lambda fs
+    (cond
+      [(null? fs) id]
+      [else (comp2 (car fs) (apply comp (cdr fs)))])))
+  
+(check-equal? ((comp) 5) 5 "comp-1")
+
+(check-equal? ((comp (lambda (x) (* 2 x))
+                     (lambda (x) (+ 1 x))) 5) 12 "comp-2")
+
+(check-equal? ((comp (lambda (x) (* 2 x))
+                     (lambda (x) (+ 1 x))
+                     add1) 5) 14 "comp-3")
+
+#+END_SRC
+
+
+* Composition of functions in sequence
+  Given variable number of functions,  a
+  function is returned where the functions are applied from
+  left to right.
+  - Definition :: seq: [A_0 -> A_1, A_1 -> A_2 ... A_{n-1}
+       -> A_n] -> A_0 -> A_n
+#+name: seq
+#+BEGIN_SRC racket
+(provide seq)
+
+(define seq
+  (lambda fs
+    (cond
+      [(null? fs) id]
+      [else (seq2 (car fs) (apply seq (cdr fs)))])))
+
+
+(check-equal? ((seq) 5) 5 "seq-1")
+
+(check-equal? ((seq (lambda (x) (* 2 x))
+                    (lambda (x) (+ 1 x))) 5) 11 "seq-2")
+
+(check-equal? ((seq (lambda (x) (* 2 x))
+                    (lambda (x) (+ 1 x))
+                     add1) 5) 12 "seq-3")
+
+#+END_SRC
+* Imports
+#+name: imports
+#+BEGIN_SRC racket
+#lang racket
+(require rackunit)
+(require racket/trace)
+(require "comp.rkt")
+
+#+END_SRC
+
+* Tangle   :boilerplate:
+#+BEGIN_SRC html :tangle var-comp.rkt :eval no :noweb yes
+<<imports>>
+<<comp>>
+<<seq>>
+#+END_SRC

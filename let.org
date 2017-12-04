@@ -1,0 +1,81 @@
+#+TITLE: POPL
+#+AUTHOR: Thirumal Ravula
+#+DATE: [2017-04-28 Fri]
+#+SETUPFILE: ./org-templates/level-0.org
+#+TAGS: boilerplate(b)
+#+EXCLUDE_TAGS: boilerplate
+#+OPTIONS: ^:nil
+
+* Introduction
+  This document narrates the use of let and letrec. 
+
+* let
+  In the let expression, the ids are evaluated from left to
+  right but can be used only in the body. 
+
+** let form one
+#+name: let-form-one
+#+BEGIN_SRC racket
+(check-equal?
+ (let add ([x 2]
+           [y 3])
+   (cond
+     [(eq? y 0) 0]
+     [else (+ x (add x (sub1 y)))])) 6 "let-1")
+
+#+END_SRC
+
+** let form two
+   Here the ids are only available in the body, therefore in
+   the below example, the =+= in the lambda expression
+   refers to the original =+= defined in the environment
+   before the let.
+#+name: let-form-two
+#+BEGIN_SRC racket
+(check-equal?
+ (let ([+
+        (lambda (x y)
+          (cond
+            [(string? x)
+             (string-append x y)]
+            [else (+ x y)]))])
+   (list (+ 1 2) (+ "see" "saw"))) '(3 "seesaw") "let-2")
+
+#+END_SRC
+
+
+* letrec
+  In letrec, the ids or the bindings are available to be
+  used in all the expressions defined either later or
+  earlier than the bindings.
+#+name: letrec-form-one
+#+BEGIN_SRC racket
+(check-equal?
+ (letrec
+     ([fact
+       (lambda (n)
+         (cond
+           [(eq? n 0) 1]
+           [else (* n (fact (sub1 n)))]))])
+   (fact 3)) 6 "letrec-1")
+
+#+END_SRC
+
+
+
+* Imports
+#+name: imports
+#+BEGIN_SRC racket
+#lang racket
+(require rackunit)
+(require racket/trace)
+
+#+END_SRC
+
+* Tangle   :boilerplate:
+#+BEGIN_SRC html :tangle let.rkt :eval no :noweb yes
+<<imports>>
+<<let-form-one>>
+<<let-form-two>>
+<<letrec-form-one>>
+#+END_SRC

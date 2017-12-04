@@ -1,0 +1,109 @@
+#+TITLE: POPL
+#+AUTHOR: Thirumal Ravula
+#+DATE: [2017-04-28 Fri]
+#+SETUPFILE: ./org-templates/level-0.org
+#+TAGS: boilerplate(b)
+#+EXCLUDE_TAGS: boilerplate
+#+OPTIONS: ^:nil
+
+* Introduction
+  This document goes through the concept of currying through
+  examples.
+
+* What is currying
+  curried-sum: number? -> [number? -> number?]
+#+NAME: currying
+#+BEGIN_SRC racket
+(define curried-sum
+  (lambda (x)
+    (lambda (y)
+      (+ x y))))
+
+(check-equal? ((curried-sum 5) 6) 11 "curried-sum")
+(check-pred procedure? (curried-sum 3) "add-curried-3")
+
+#+END_SRC
+
+
+* Avoid nested argument passing to the curried functions
+  Here, for a curried function, the arguments are to be one
+  at a time to each inner function that consumes the
+  argument to return a function as seen above.  To do away
+  with the clutter and allow us to pass all the arguments to
+  the top level function might make the code readable.  The
+  below definition helps to do just that.  The idea is take
+  each argument from left and apply the functions from the
+  top.
+
+#+NAME: non-cluttered
+#+BEGIN_SRC racket
+;;; (: f x)      = (f x)
+;;; (: f x y)    = (: (f x) y) = ((f x) y)
+;;; (: f x . xs) = (: (f x) xs)
+;;; (: f x y z) = (: (f x) y z) = (: ((f x) y) z) = (((f x) y) z)
+(provide :)
+(define :
+  (lambda (f x . xs)
+    (cond
+      [(null? xs) (f x)]
+      [else (apply : (f x) xs)])))
+
+;;; three-curried-sum: number? -> [number? -> number?] -> [number? -> number?]
+(define three-curried-sum
+  (lambda (x)
+    (lambda (y)
+      (lambda (z)
+        (+ x y z)))))
+
+(check-equal? (((three-curried-sum 3) 4) 5) 12 "three-curried-sum")
+(check-equal? (: three-curried-sum 1 2 3) 6 "non-curried")
+
+#+END_SRC
+
+
+* Providing syntactic support for defining curried functions
+  For each argument a function is created.
+#+name: curry-define
+#+BEGIN_SRC racket
+(define-syntax lambda:
+  (syntax-rules ()
+    [(lambda: (x) body) (lambda (x) body)]
+    [(lambda: (x y ...) body)
+     (lambda (x)
+       (lambda: (y ...) body))]))
+
+#+END_SRC
+
+* Add in terms of lambda:
+#+name: new-add
+#+BEGIN_SRC racket
+(define add:
+  (lambda: (x y z)
+    (+ x y z)))
+
+(check-equal? (((add: 1) 2) 3) 6 "new-add-1")
+(check-equal? (: add: 1 2 3) 6 "new-add-1")
+
+#+END_SRC
+  
+  
+
+
+* Imports
+#+name: imports
+#+BEGIN_SRC racket
+#lang racket
+(require rackunit)
+(require racket/trace)
+
+#+END_SRC
+
+
+* Tangle   :boilerplate:
+#+BEGIN_SRC html :tangle currying.rkt :eval no :noweb yes
+<<imports>>
+<<currying>>
+<<non-cluttered>>
+<<curry-define>>
+<<new-add>>
+#+END_SRC

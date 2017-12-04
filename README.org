@@ -1,0 +1,5 @@
+These are solutions to and examples from the course on
+programming languages taught by Prof. Venkatesh at IIIT,
+Hyderabad during year 2016.
+
+The texkbook is =Essentials of Programming Languages=.

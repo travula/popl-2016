@@ -1,0 +1,47 @@
+#+TITLE: ITWS2 mid 1
+#+AUTHOR: Thirumal Ravula
+#+DATE: [2017-04-28 Fri]
+#+TAGS: boilerplate(b)
+#+EXCLUDE_TAGS: boilerplate
+#+OPTIONS: ^:nil
+
+
+* Splice
+
+;;; usage
+(splice '() '(a b c)) ;; => '(a b c)
+(splice '(a b c) '()) ;; => '(a b c)
+(splice '(a b c) '(e f)) ;; => '(a e b f c)
+(splice '(a b) '(e f g)) ;; => '(a e b f g)
+
+;;; splice : [list? list?] -> list? 
+
+#+BEGIN_SRC racket :tangle itws2.rkt
+#lang racket
+(define splice
+  (lambda (ls1 ls2)
+    (cond
+      [(null? ls1) ls2]
+      [(null? ls2) ls1]
+      [(cons (car ls1)
+             (cons (car ls2)
+                   (splice (cdr ls1)
+                           (cdr ls2))))])))
+      
+      
+
+#+END_SRC
+
+* Composition
+
+Define the function =compose= that takes to functions =f=
+and =g= and returns a function that when given =x=, applies
+=f= to the result of applying =g= to =x=
+
+#+BEGIN_SRC racket :tangle itws2.rkt
+(define compose
+  (lambda (f g)
+    (lambda (x)
+      (f (g x)))))
+
+#+END_SRC

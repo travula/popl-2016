@@ -1,0 +1,98 @@
+#+TITLE: POPL
+#+AUTHOR: Thirumal Ravula
+#+DATE: [2017-04-28 Fri]
+#+SETUPFILE: ./org-templates/level-0.org
+#+TAGS: boilerplate(b)
+#+EXCLUDE_TAGS: boilerplate
+#+OPTIONS: ^:nil
+
+* Composition
+  Given two functions f: A -> B and g: B -> C, the
+  composition of g with f is the function from A to C
+  defined as (g * f)(x) = g(f(x))
+
+#+name: comp2
+#+BEGIN_SRC racket
+(provide comp2)
+(define comp2
+  (lambda (g f)
+    (lambda (x)
+      (g (f x)))))
+
+(check-equal? ((comp2 (lambda (x) (* 2 x))
+                      (lambda (x) (+ 1 x))) 5) 12)
+
+#+END_SRC
+
+** Using composition for temperature conversion
+   Conversion from centigrade to fahrenheit can be thought
+   of as adding =32= as a first step and multiplying the
+   result with a factor =9/5=.
+   - add-32 : real? -> real?
+   - mult-by-9/5: real? -> real?
+   - c->f : real? -> real?
+#+name: temp
+#+BEGIN_SRC racket
+(provide add-32)
+(define add-32
+  (lambda (x)
+    (+ x 32)))
+
+(provide mult-by-9/5)
+(define mult-by-9/5
+  (lambda (x)
+    (* x (/ 9.0 5.0))))
+
+(define c->f
+  (comp2 add-32 mult-by-9/5))
+
+(check-equal? (c->f 0) 32 "c->f-1")
+(check-equal? (c->f 32) 89.6 "c->f-2")
+
+#+END_SRC
+
+* Sequential Composition
+  Apply the left function first and later the right
+  function.  (f * g) (x) -> g(f(x))
+
+#+name: seq2
+#+BEGIN_SRC racket
+(provide seq2)
+(define seq2
+  (lambda (f g)
+    (comp2 g f)))
+
+(check-equal? ((seq2 (lambda (x) (* 2 x))
+                     (lambda (x) (+ 1 x))) 5) 11)
+
+#+END_SRC
+  
+* Identity function
+  I : Id -> Id
+  produces the same result as the argument
+#+name: identity
+#+BEGIN_SRC racket
+(provide id)
+(define id
+  (lambda (x) x))
+
+(check-equal? (id 5) 5 "id-1")
+
+#+END_SRC
+* Imports
+#+name: imports
+#+BEGIN_SRC racket
+#lang racket
+(require rackunit)
+(require racket/trace)
+
+#+END_SRC
+
+* Tangle   :boilerplate:
+#+BEGIN_SRC html :tangle comp.rkt :eval no :noweb yes
+<<imports>>
+<<comp2>>
+<<temp>>
+<<seq2>>
+<<identity>>
+#+END_SRC
